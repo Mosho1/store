@@ -229,13 +229,13 @@ export class Store<T, S> extends Mocker {
                 action.deferred = null;
                 return data;
             } catch (error) {
-                if (action.deferred) {
+                if (action.deferred && action.deferred.subscribedTo) {
                     action.deferred!.reject(error);
                 }
                 action.deferred = null;
                 throw error;
             }
-        }   
+        }
 
         // if the handler is "async", use corresponding handlers
         if (meta.isAsync && isPromise) {
@@ -253,7 +253,7 @@ export class Store<T, S> extends Mocker {
                 return data;
             } catch (error) {
                 this.setActionStateAndDispatch(action, typeManager, ActionStates.ERROR, error);
-                if (action.deferred) {
+                if (action.deferred && action.deferred.subscribedTo) {
                     action.deferred!.reject(error);
                 }
                 action.deferred = null;
@@ -511,6 +511,8 @@ export const unsubscribeAllStores = () => {
 
 export const waitForAction = async (action: any): Promise<any> => {
     assert(action.deferred === null || action.deferred.promise, `${action.toString()} is not a valid action.`);
-    if (action.deferred === null) return;
-    return action.deferred.promise;
+    const _action = action as { deferred: Deferred<any> };
+    if (_action.deferred === null) return;
+    _action.deferred.subscribedTo = true;
+    return _action.deferred.promise;
 };  

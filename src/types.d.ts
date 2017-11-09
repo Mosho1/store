@@ -6,6 +6,7 @@ interface IDeferred<T> {
     resolve: Function;
     reject: Function;
     promise: Promise<T>;
+    subscribedTo: boolnea;
 }
 
 interface AsyncActionPayload<T> {
