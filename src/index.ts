@@ -71,16 +71,16 @@ export class Store<T, S> extends Mocker {
         }
         else if (meta.isAsync) {
             return async (...args: any[]) => {
-                const promise = bound(...args);
-                assert(promise && promise.then, `async payload creator <${type}> did not return a promise.`);
                 try {
+                    const promise = bound(...args);
+                    assert(promise && promise.then, `async payload creator <${type}> did not return a promise.`);
                     let callNumber = ++meta.callCount;
                     const ret = await promise;
                     if (meta.opts.latest && callNumber !== meta.callCount) {
                         return null;
                     }
                     return ret;
-                } catch(e) {
+                } catch (e) {
                     this.handleError(e, type);
                     throw e;
                 }
@@ -210,15 +210,35 @@ export class Store<T, S> extends Mocker {
     async dispatch({ type, meta, payload, action }: Action<any>, actionCreatorArgs: any[]) {
         assert(this.store.dispatch, 'store has no dispatch method, make sure it\'s a valid store.');
 
-        const typeManager = new ActionTypeManager(type, this._name);
+        const typeManager = new ActionTypeManager(type);
 
         const isPromise = payload && (payload as Promise<any>).then;
 
-        assert((meta.isAsync && isPromise) || (!meta.isAsync && !isPromise), `action creator and action handler mismatch in action <${typeManager.getType()}>. async action handlers should be paired with async actions.`);
-
         action.deferred = new Deferred(action.deferred);
 
-        if (isPromise) {
+        // if the handler is not "async", treat the single handler as a success handler
+        if (!meta.isAsync && isPromise) {
+            try {
+                const data = await payload || null;
+                if (data !== null) {
+                    this.getStore().dispatch({ type: typeManager.getType(), payload: this.selectGlobalState(data) });
+                }
+                if (action.deferred) {
+                    action.deferred!.resolve();
+                }
+                action.deferred = null;
+                return data;
+            } catch (error) {
+                if (action.deferred) {
+                    action.deferred!.reject(error);
+                }
+                action.deferred = null;
+                throw error;
+            }
+        }   
+
+        // if the handler is "async", use corresponding handlers
+        if (meta.isAsync && isPromise) {
             const startPayload = actionCreatorArgs.length <= 1 ? actionCreatorArgs[1] : actionCreatorArgs;
             this.setActionStateAndDispatch(action, typeManager, ActionStates.START, startPayload);
             try {
@@ -241,6 +261,7 @@ export class Store<T, S> extends Mocker {
             }
         }
 
+        // sync handler, sync action payload creator
         this.getStore().dispatch({ type: typeManager.getType(), payload: this.selectGlobalState(payload) });
 
         // added for consistency but doesn't really belong in sync functions
@@ -446,7 +467,7 @@ export function select(...selectors: Selector<any>[]): MethodDecorator {
             combiner: descriptor[selectorFnProperty]
         };
 
-        descriptor[selectorFnProperty] = function() {
+        descriptor[selectorFnProperty] = function () {
             return Store.prototype.applySelector.call(this, key);
         };
         return descriptor;

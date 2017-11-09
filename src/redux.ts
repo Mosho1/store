@@ -61,8 +61,8 @@ export function createReduxStore(stores: Dictionary<AnyStore>, initialState?: an
 }
 
 export class ReduxStore<T, S> extends Store<T, S> {
-    constructor(...args) {
-        super(...args);
+    constructor(args) {
+        super(args);
         this.store = actionQueuer;
     }
 
