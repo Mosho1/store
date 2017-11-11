@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import * as si from 'seamless-immutable';
 import { createSelector } from 'reselect';
 
-export {action, select} from './index';
+export { action, select } from './index';
 
 class ActionQueuer {
     queue: Action<any>[] = [];
@@ -97,13 +97,16 @@ export class ReduxStore<T, S> extends Store<T, S> {
     connect<U>(selector: MapStoreToProps<this, any, Partial<U>>, options?: { pure: boolean }): Function
     connect<U>(selector?: MapStoreToProps<this, any, Partial<U>>, options?: { pure: boolean }): Function {
 
-        return (component: Function): Function => {
+        return (component: Function & { defaultProps: object }): Function => {
             // assert(component.prototype instanceof React.Component, 'Must be a component');
             const mapStateToStoreState = selector
                 ? (_: any, props: Partial<U>) => selector(this, props)
                 : this.mapStateToStoreState;
 
-            return connect(mapStateToStoreState as any, undefined as any, undefined as any, options || {})(component);
+            const connected = connect(mapStateToStoreState as any, undefined as any, undefined as any, options || {})(component);
+            connected.defaultProps = { ...connected.defaultProps, store: this.getStore() };
+
+            return connected;
         };
 
     }
