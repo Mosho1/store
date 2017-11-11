@@ -181,7 +181,7 @@ export class Store<T, S> extends Mocker {
     }
 
     applySelector(key: string) {
-        return this.selectors[key].call(this, this);
+        return this.selectors[key].call(this, this, this.state);
     }
 
     getState() {
@@ -458,8 +458,7 @@ export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, o
 }
 
 // decorator for Store class methods
-export function select<T>(...selectors: Selector<T>[]): MethodDecorator;
-export function select(...selectors: Selector<any>[]): MethodDecorator {
+export function select<T = any>(...selectors: Selector<T>[]): MethodDecorator {
     return (target: any, key: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
         const { metadata } = target as AnyStore;
 
