@@ -28,7 +28,7 @@ describe('tests', () => {
         });
 
         expect(store.state.did).to.be.null;
-        store.doSomething();
+        expect(store.doSomething()).to.eql({did: 'this'});
         expect(store.state.did).to.equal('this');
     });
 

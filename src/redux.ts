@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux';
-import {AnyStore, Store} from './index';
+import { AnyStore, Store } from './index';
 import { connect } from 'react-redux';
 import * as si from 'seamless-immutable';
 import { createSelector } from 'reselect';
@@ -49,7 +49,7 @@ export function createReduxStore(stores: Dictionary<AnyStore>, initialState?: an
     initialState = initialState || {};
     for (let k in stores) {
         reducers[k] = stores[k].reducer;
-        initialState[k] = {...initialState[k], ...stores[k].initialState};
+        initialState[k] = { ...initialState[k], ...stores[k].initialState };
     }
 
     const combinedReducer = combineReducers(reducers);
@@ -78,7 +78,7 @@ export class ReduxStore<T, S> extends Store<T, S> {
             selectors = [store => store.state];
         }
         const createSelectorArgs = [...selectors, combiner.bind(this) as any]; // weird typings for reselect
-        return (createSelector as any)(...createSelectorArgs);
+        return createSelector.apply(null, createSelectorArgs);
     }
 
     private mapStateToStoreState: MapStateToProps<any, any> = (state): Dictionary<T> => {
