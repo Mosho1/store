@@ -23,7 +23,7 @@ export class Store<T, S> extends Mocker {
     selectors: Dictionary<Function> = {};
     store: DataStore<any> = {
         dispatch: (action) => {
-            this.state = this.reducer(this.state, action);
+            this.setState(this.reducer(this.state, action));
         },
         getState: () => {
             return this.state;
@@ -350,6 +350,7 @@ export class Store<T, S> extends Mocker {
     }
 
     private notifySubscribers(prevState: T) {
+        // check if this.state === prevState?
         this.subscriptions.forEach(sub => sub(this.state, prevState));
         this.innerStores.forEach(store => {
             if (store.selectLocalState) {
