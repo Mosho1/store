@@ -1,3 +1,5 @@
+#Introduction
+
 <Name> is a state management library, focused on better developer experience.
 
 The generic store is standalone, but the redux extension uses redux, reselect, and seamless-immutable to provide a modern app state management solution.
@@ -59,11 +61,11 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 
 # Motivation
 
-1. Best of both worlds
+## Best of both worlds
 
 <Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem, while also providing an easy to use interface similar to mobx. The only difference in everyday use from mobx is having to explicitly list dependencies, rather than have them magically (and usefully) computed by mobx.
 
-2. Reduce boilerplate
+## Reduce boilerplate
 
 Here is the simplest possible typical redux action creator:
 
@@ -78,6 +80,6 @@ export const setVisibilityFilter = filter => {
 
 By using named class methods, `type` can be abstracted away.
 
-3. Ease of use
+## Ease of use
 
 Accessing state and computed properties is easily done via `this`. Calling actions is easily done by calling those actions from a stored reference to the store. The bare minimum additional code is required to have the benefits of immutable, predictable state.
