@@ -81,12 +81,7 @@ export class Store<T, S> extends Mocker {
                     const ret = await promise;
                     if (callNumber !== meta.callCount) {
                         const { latest } = meta.opts;
-                        switch (typeof latest) {
-                            case 'undefined':
-                                return ret;
-                            case 'boolean':
-                                return latest ? null : ret;
-                        }
+                        return latest ? null : ret;
                     }
                     return ret;
                 } catch (e) {
