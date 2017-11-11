@@ -61,7 +61,7 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 
 # Motivation
 
-## Best of both worlds
+## Predictable state
 
 <Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem, while also providing an easy to use interface similar to mobx. The only difference in everyday use from mobx is having to explicitly list dependencies, rather than have them magically (and usefully) computed by mobx.
 
@@ -82,4 +82,4 @@ By using named class methods, `type` can be abstracted away.
 
 ## Ease of use
 
-Accessing state and computed properties is easily done via `this`. Calling actions is easily done by calling those actions from a stored reference to the store. The bare minimum additional code is required to have the benefits of immutable, predictable state.
+Accessing state and computed properties is easily done via `this`. Calling actions is easily done by calling those actions directly from a reference to the store. The bare minimum additional code is required to have the benefits of immutable, predictable state.
