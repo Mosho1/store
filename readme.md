@@ -4,7 +4,7 @@ The generic store is standalone, but the redux extension uses redux, reselect, a
 
 Despite being based on redux, it functions similarly (and was influenced by) mobx. 
 
-The idea is to use a Store class that houses our state. All interactions with state are done with a (typically but not necessarily singleton) instance of that class. Local component state is kept to a minimum.
+The idea is to use a class instance that stores our state. All interactions with state are done with through the store instance. Local component state is kept to a minimum.
 
 There are 3 main components to interacting with state:
 
@@ -62,11 +62,6 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 1. Best of both worlds
 
 <Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem, while also providing an easy to use interface similar to mobx. The only difference in everyday use from mobx is having to explicitly list dependencies, rather than have them magically (and usefully) computed by mobx.
-
-A mobx store:
-
-```
-```
 
 2. Reduce boilerplate
 
