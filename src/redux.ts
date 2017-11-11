@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import * as si from 'seamless-immutable';
 import { createSelector } from 'reselect';
 
+export {action, select} from './index';
+
 class ActionQueuer {
     queue: Action<any>[] = [];
     reducer = (state: any) => state;
@@ -81,7 +83,7 @@ export class ReduxStore<T, S> extends Store<T, S> {
     protected createSelector(metadata: SelectorsMeta) {
         let { selectors, combiner } = metadata;
         if (selectors.length === 0) {
-            selectors = [store => store.state];
+            selectors = [(store: AnyStore) => store.state];
         }
         const createSelectorArgs = [...selectors, combiner.bind(this) as any]; // weird typings for reselect
         return createSelector.apply(null, createSelectorArgs);

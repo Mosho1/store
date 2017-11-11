@@ -1,4 +1,4 @@
-export const getAssert = (isProd, report) => (condition: any, message: string | Error, strict = true) => {
+export const getAssert = (isProd: boolean, report: Function) => (condition: any, message: string | Error, strict = true) => {
 
     if (condition) return true;
 

@@ -7,8 +7,8 @@ export class Deferred<T> implements IDeferred<T> {
     subscribedTo = false;
     deactivated = false;
 
-    wrapActivation = (fn) => {
-        return (...args) => {
+    wrapActivation = (fn: Function) => {
+        return (...args: any[]) => {
             if (!this.deactivated) {
                 fn(...args);
             }
@@ -20,11 +20,11 @@ export class Deferred<T> implements IDeferred<T> {
             let res, rej;
             if (deferred) {
                 deferred.deactivated = true;
-                res = (data) => {
+                res = (data: any) => {
                     deferred.resolveForce(data);
                     resolve(data);
                 };
-                rej = (error) => {
+                rej = (error: Error) => {
                     deferred.rejectForce(error);
                     reject(error);
                 };

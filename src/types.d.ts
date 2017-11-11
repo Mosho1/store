@@ -96,8 +96,3 @@ interface DataStore<T> {
     subscribe(subscriber: Function): void;
 }
 
-declare module 'assert' {
-    var x: any;
-    export = x;
-}
-

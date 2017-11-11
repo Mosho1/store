@@ -22,7 +22,7 @@ export class Store<T, S> extends Mocker {
     actions: Dictionary<PayloadCreator<T>> = {};
     selectors: Dictionary<Function> = {};
     store: DataStore<any> = {
-        dispatch: (action) => {
+        dispatch: (action: Action<any>) => {
             this.setState(this.reducer(this.state, action));
         },
         getState: () => {
@@ -387,6 +387,13 @@ export class Store<T, S> extends Mocker {
 
     protected processInitialState(state: T) {
         return state;
+    }
+
+    connect(selector: Function): Function {
+        return (decorated: Function) => {
+            const arg = selector.call(this, this, this.state);
+            return decorated(arg);
+        };
     }
 
     constructor({ name = 'store', initialState = {} as T, deps, parentStore }: StoreConstructorArgs<T, S> = {}) {
