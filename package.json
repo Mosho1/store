@@ -6,7 +6,8 @@
   "scripts": {
     "test": "ts-node src/tests/index",
     "test:watch": "nodemon -x \"npm test\" -e ts",
-    "debug": "tsc -p tsconfig.json && node --inspect-brk build/tests/index",
+    "build": "tsc -p tsconfig.json",
+    "debug": "npm run build && node --inspect-brk build/tests/index",
     "debug:watch": "nodemon -x \"npm run debug\" -e ts"
   },
   "author": "",
