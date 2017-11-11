@@ -73,7 +73,6 @@ export class Store<T, S> extends Mocker {
             return bound;
         }
         else if (meta.isAsync) {
-            meta.cachedArguments
             return async (...args: any[]) => {
                 try {
                     const promise = bound(...args);
