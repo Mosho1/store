@@ -28,7 +28,7 @@ describe('tests', () => {
         });
 
         expect(store.state.did).to.be.null;
-        expect(store.doSomething()).to.eql({did: 'this'});
+        expect(store.doSomething()).to.eql({ did: 'this' });
         expect(store.state.did).to.equal('this');
     });
 
@@ -493,5 +493,65 @@ describe('tests', () => {
         expect(store.doSomething).to.have.property('state', 'success');
         expect(store.state.didSomething).to.equal(3);
         expect(store.state.didSomethingElse).to.equal(1);
+    });
+
+    it('addInnerStore', async () => {
+        class TestStore extends Store<any, any> {
+            @action((state, payload) => ({ ...state, ...payload }))
+            doSomething() {
+                return { didSomething: true };
+            }
+        }
+
+        class InnerTestStore extends Store<any, any> {
+            @action((state, payload) => ({ ...state, ...payload }))
+            doSomething() {
+                return { didSomething: true };
+            }
+        }
+
+        const store = new TestStore({
+            initialState: {
+                didSomething: false,
+                inner: { didSomething: false }
+            }
+        });
+
+        const innerStore = new InnerTestStore({
+            initialState: {
+                didSomethingElse: false
+            }
+        });
+
+        store.addInnerStore(innerStore, state => state.inner, inner => ({ inner }));
+        expect(store.state.inner.didSomething).to.be.false;
+        expect(store.state.didSomething).to.be.false;
+        expect(innerStore.state).to.not.have.property('didSomethingElse');
+        expect(innerStore.state).to.equal(store.state.inner);
+
+        store.doSomething();
+        expect(store.state.inner.didSomething).to.be.false;
+        expect(store.state.didSomething).to.be.true;
+
+        innerStore.doSomething();
+        expect(store.state.inner.didSomething).to.be.true;
+        expect(store.state.didSomething).to.be.true;
+        expect(innerStore.state).to.equal(store.state.inner);
+
+        const args: any[] = [];
+        const spy = function () {
+            args.push(Array.from(arguments));
+        }
+        innerStore.subscribe(spy);
+
+        innerStore.doSomething();
+        expect(args).to.eql([[{ didSomething: true }, { didSomething: true }]]);
+
+        store.doSomething();
+        expect(args).to.eql([
+            [{ didSomething: true }, { didSomething: true }],
+            [{ didSomething: true }, { didSomething: true }]
+        ]);
+
     });
 });
