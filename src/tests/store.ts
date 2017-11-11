@@ -553,5 +553,17 @@ describe('tests', () => {
             [{ didSomething: true }, { didSomething: true }]
         ]);
 
+        innerStore.unsubscribe();
+        store.subscribe(spy);
+        store.doSomething();
+        expect(args).to.eql([
+            [{ didSomething: true }, { didSomething: true }],
+            [{ didSomething: true }, { didSomething: true }],
+            [
+                { didSomething: true, inner: { didSomething: true } },
+                { didSomething: true, inner: { didSomething: true } }
+            ]
+        ]);
+
     });
 });
