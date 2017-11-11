@@ -27,7 +27,7 @@ class MyStore extends Store<any, any> {
 }
 ```
 
-`merge`, in this case, is what is typically known as a reducer. It describes how an update payload should be integrated into the current state. `merge` can be something like an immutable merge, or `Object.assign`. Another example might be `replace` which replaces the current state in its entirety with the payload. These reducers should be kept concise and descriptive, ideally a single verb.
+`merge` here is what is typically known as a reducer. It's a pure function that implements how an update payload should be integrated into the current state. `merge` in this case can be something like an immutable merge, or `Object.assign`. Another example might be `replace` which replaces the current state in its entirety with the payload. These reducers should be kept concise and descriptive, ideally a single verb.
 
 ## Selectors
 
