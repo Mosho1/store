@@ -1,6 +1,6 @@
-let beforeEachFn;
+let beforeEachFn: Function;
 
-export const beforeEach = fn => {
+export const beforeEach = (fn: Function) => {
     beforeEachFn = fn;
 };
 
@@ -48,4 +48,4 @@ it.only = (name: string, test: Function) => {
     onlyTests.push(makeTest(name, test));
 }
 
-export const describe = (_, fn) => fn();
+export const describe = (_: string, fn: Function) => fn();

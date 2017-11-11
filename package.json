@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ts-node src/tests/index"
+    "test": "ts-node src/tests/index",
+    "test:watch": "nodemon -x \"npm test\" -e ts",
+    "debug": "tsc -p tsconfig.json && node --inspect-brk build/tests/index"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +14,7 @@
     "@types/chai": "^4.0.4",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
+    "react": "^16.1.0",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
     "reselect": "^3.0.1",

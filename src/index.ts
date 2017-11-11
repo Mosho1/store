@@ -13,13 +13,6 @@ class StoreMetadata<T> {
 
 export type AnyStore = Store<any, any>;
 
-export interface StoreConstructorArgs<T, S> {
-    name?: string;
-    initialState?: T;
-    deps?: S;
-    parentStore?: AnyStore;
-}
-
 // stores references to all active stores, useful for hot reloading
 const stores = new Set<AnyStore>();
 
@@ -28,7 +21,17 @@ export class Store<T, S> extends Mocker {
     reducersList: Reducer<any>[] = [];
     actions: Dictionary<PayloadCreator<T>> = {};
     selectors: Dictionary<Function> = {};
-    store: DataStore<any>;
+    store: DataStore<any> = {
+        dispatch: (action) => {
+            this.state = this.reducer(this.state, action);
+        },
+        getState: () => {
+            return this.state;
+        },
+        subscribe: () => {
+
+        }
+    };
     _name: string;
     initialState: T;
     state: T;
@@ -38,8 +41,8 @@ export class Store<T, S> extends Mocker {
     innerStores: AnyStore[] = [];
     subscriptions: Function[] = [];
     actionStateSubscriptions: Function[] = [];
-    selectGlobalState = x => x;
-    selectLocalState = x => x;
+    selectGlobalState = (x: any) => x;
+    selectLocalState = (x: any) => x;
 
     get name() {
         return this._name;
@@ -70,14 +73,21 @@ export class Store<T, S> extends Mocker {
             return bound;
         }
         else if (meta.isAsync) {
+            meta.cachedArguments
             return async (...args: any[]) => {
                 try {
                     const promise = bound(...args);
                     assert(promise && promise.then, `async payload creator <${type}> did not return a promise.`);
                     let callNumber = ++meta.callCount;
                     const ret = await promise;
-                    if (meta.opts.latest && callNumber !== meta.callCount) {
-                        return null;
+                    if (callNumber !== meta.callCount) {
+                        const { latest } = meta.opts;
+                        switch (typeof latest) {
+                            case 'undefined':
+                                return ret;
+                            case 'boolean':
+                                return latest ? null : ret;
+                        }
                     }
                     return ret;
                 } catch (e) {
@@ -142,13 +152,18 @@ export class Store<T, S> extends Mocker {
             const actionMeta = actions[k];
             const payloadCreatorWithErrorHandler = this.wrapPayloadCreator(actionMeta, type);
 
-            let action = ((...args) => {
+            let action = ((...args: any[]) => {
                 if (!this.checkCachedArguments(args, actionMeta)) return Promise.resolve();
-                return this.dispatch({
+                const payload = payloadCreatorWithErrorHandler(...args);
+                const isPromise = payload && (payload as Promise<any>).then;
+                
+                const method = isPromise ? this.dispatchAsync : this.dispatchSync;
+        
+                return method.call(this, {
                     type,
                     action: action as PayloadCreator<any>,
                     meta: actionMeta,
-                    payload: payloadCreatorWithErrorHandler(...args)
+                    payload
                 }, args);
             }) as Partial<PayloadCreator<any>>;
 
@@ -166,7 +181,7 @@ export class Store<T, S> extends Mocker {
     }
 
     applySelector(key: string) {
-        return this.selectors[key](this);
+        return this.selectors[key].call(this, this);
     }
 
     getState() {
@@ -197,69 +212,18 @@ export class Store<T, S> extends Mocker {
         return constructor.metadata;
     };
 
-    private setActionStateAndDispatch(action: PayloadCreator<any>, type: ActionTypeManager, state: ActionState, payload: any) {
+    private setActionState(action: PayloadCreator<any>, state: ActionState) {
         action.state = state;
         if (this.parentStore) {
             this.parentStore.actionStateSubscriptions.forEach(fn => fn(action, state));
         } else {
             this.actionStateSubscriptions.forEach(fn => fn(action, state));
         }
-        this.getStore().dispatch({ type: type.getTypeWithState(state), payload });
     }
 
-    async dispatch({ type, meta, payload, action }: Action<any>, actionCreatorArgs: any[]) {
+    dispatchSync({ type, payload, action }: Action<any>) {
         assert(this.store.dispatch, 'store has no dispatch method, make sure it\'s a valid store.');
-
         const typeManager = new ActionTypeManager(type);
-
-        const isPromise = payload && (payload as Promise<any>).then;
-
-        action.deferred = new Deferred(action.deferred);
-
-        // if the handler is not "async", treat the single handler as a success handler
-        if (!meta.isAsync && isPromise) {
-            try {
-                const data = await payload || null;
-                if (data !== null) {
-                    this.getStore().dispatch({ type: typeManager.getType(), payload: this.selectGlobalState(data) });
-                }
-                if (action.deferred) {
-                    action.deferred!.resolve();
-                }
-                action.deferred = null;
-                return data;
-            } catch (error) {
-                if (action.deferred && action.deferred.subscribedTo) {
-                    action.deferred!.reject(error);
-                }
-                action.deferred = null;
-                throw error;
-            }
-        }
-
-        // if the handler is "async", use corresponding handlers
-        if (meta.isAsync && isPromise) {
-            const startPayload = actionCreatorArgs.length <= 1 ? actionCreatorArgs[1] : actionCreatorArgs;
-            this.setActionStateAndDispatch(action, typeManager, ActionStates.START, startPayload);
-            try {
-                const data = await payload || null;
-                if (data !== null) {
-                    this.setActionStateAndDispatch(action, typeManager, ActionStates.SUCCESS, this.selectGlobalState(data));
-                }
-                if (action.deferred) {
-                    action.deferred!.resolve();
-                }
-                action.deferred = null;
-                return data;
-            } catch (error) {
-                this.setActionStateAndDispatch(action, typeManager, ActionStates.ERROR, error);
-                if (action.deferred && action.deferred.subscribedTo) {
-                    action.deferred!.reject(error);
-                }
-                action.deferred = null;
-                throw error;
-            }
-        }
 
         // sync handler, sync action payload creator
         this.getStore().dispatch({ type: typeManager.getType(), payload: this.selectGlobalState(payload) });
@@ -271,6 +235,46 @@ export class Store<T, S> extends Mocker {
         action.deferred = null;
 
         return payload;
+    }
+
+    async dispatchAsync({ type, meta, payload, action }: Action<any>, actionCreatorArgs: any[]) {
+        assert(this.store.dispatch, 'store has no dispatch method, make sure it\'s a valid store.');
+        const typeManager = new ActionTypeManager(type);
+
+        const deferred = action.deferred = new Deferred(action.deferred);
+
+        if (meta.isAsync) {
+            const startPayload = actionCreatorArgs;
+            this.setActionState(action, ActionStates.START);
+            this.getStore().dispatch({ type: typeManager.getTypeWithState(ActionStates.START), payload: startPayload });
+        }
+        try {
+            const data = await payload || null;
+            if (data !== null) {
+                this.getStore().dispatch({ type: typeManager.getTypeWithState(ActionStates.SUCCESS), payload: this.selectGlobalState(data) });
+            }
+            if (deferred) {
+                deferred!.resolve();
+            }
+            if (deferred === action.deferred) {
+                action.deferred = null;
+                this.setActionState(action, ActionStates.SUCCESS);
+            }
+            return data;
+        } catch (error) {
+            if (meta.isAsync) {
+                this.getStore().dispatch({ type: typeManager.getTypeWithState(ActionStates.ERROR), payload: error });
+            }
+            if (deferred && deferred.subscribedTo) {
+                deferred!.reject(error);
+            }
+            if (deferred === action.deferred) {
+                action.deferred = null;
+                this.setActionState(action, ActionStates.ERROR);
+            }
+            throw error;
+        }
+
     }
 
     reducer = (state: T, action: Action<any>) => {
@@ -327,7 +331,7 @@ export class Store<T, S> extends Mocker {
         this.subscriptions.push(fn);
     }
 
-    unsubscribeSingle(fn: Function, subscriptions: Function[]) {
+    private unsubscribeSingle(fn: Function, subscriptions: Function[]) {
         const index = subscriptions.indexOf(fn);
         if (index > -1) {
             subscriptions.splice(index, 1);
@@ -406,16 +410,16 @@ export class Store<T, S> extends Mocker {
 // decorator for Store class methods
 export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, opts: ActionOptions = {}): MethodDecorator {
     return (
-        target: AnyStore,
-        key: string,
+        target: any,
+        key: string | symbol,
         descriptor: TypedPropertyDescriptor<any>
     ): TypedPropertyDescriptor<any> => {
 
-        assert(target.dispatch, 'can only use the @action decorator on a Store.');
+        assert(target instanceof Store, 'can only use the @action decorator on a Store.');
 
-        const { metadata } = target;
+        const { metadata } = target as AnyStore;
 
-        let actionName: string, handlerFn: Reducer<any>, isAsync: boolean;
+        let actionName: string | symbol, handlerFn: Reducer<any>, isAsync: boolean;
 
         switch (typeof actionHandler) {
             case 'function': {
@@ -442,10 +446,10 @@ export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, o
         const newDescriptor: PropertyDescriptor = {
             // allow overwriting for tests
             set(value) {
-                this.actions[actionName] = value;
+                (this as AnyStore).actions[actionName] = value;
             },
             get() {
-                return this.actions[actionName];
+                return (this as AnyStore).actions[actionName];
             }
         };
 
@@ -453,12 +457,11 @@ export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, o
     };
 }
 
-
 // decorator for Store class methods
 export function select<T>(...selectors: Selector<T>[]): MethodDecorator;
 export function select(...selectors: Selector<any>[]): MethodDecorator {
-    return (target: AnyStore, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
-        const { metadata } = target;
+    return (target: any, key: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
+        const { metadata } = target as AnyStore;
 
         const selectorFnProperty = 'get' in descriptor ? 'get' : 'value';
 
@@ -468,8 +471,9 @@ export function select(...selectors: Selector<any>[]): MethodDecorator {
         };
 
         descriptor[selectorFnProperty] = function () {
-            return Store.prototype.applySelector.call(this, key);
+            return Store.prototype['applySelector'].call(this, key);
         };
+
         return descriptor;
     };
 }
@@ -480,8 +484,7 @@ export interface AsyncActionHandlers<T> {
     [key: string]: Reducer<T>;
 }
 
-export const handleAsyncAction = (handlers: AsyncActionHandlers<any>): Reducer<any> => (state, payload: AsyncActionPayload<any>, type: string) => {
-
+export const handleAsyncAction = (handlers: AsyncActionHandlers<any>): Reducer<any> => (state, payload: any, type: string) => {
     const typeManager = new ActionTypeManager(type);
 
     const { SUCCESS, ERROR, START } = ActionTypeManager;
@@ -495,9 +498,12 @@ export const handleAsyncAction = (handlers: AsyncActionHandlers<any>): Reducer<a
             return handlers[ERROR](state, payload);
         }
     }
-
     if (typeManager.isStart() && handlers[START]) {
-        return handlers[START](state, payload);
+        if (Array.isArray(payload)) {
+            return (handlers[START] as any)(state, ...payload);
+        } else {
+            return handlers[START](state, payload);
+        }
     }
 
     return state;
@@ -515,4 +521,4 @@ export const waitForAction = async (action: any): Promise<any> => {
     if (_action.deferred === null) return;
     _action.deferred.subscribedTo = true;
     return _action.deferred.promise;
-};  
+};

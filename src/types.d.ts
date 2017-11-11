@@ -5,8 +5,19 @@ type ActionPayload<T> = T | Promise<T>;
 interface IDeferred<T> {
     resolve: Function;
     reject: Function;
+    resolveForce: Function;
+    rejectForce: Function;
     promise: Promise<T>;
-    subscribedTo: boolnea;
+    subscribedTo: boolean;
+    deactivated: boolean;
+    wrapActivation: any;
+}
+
+interface StoreConstructorArgs<T, S> {
+    name?: string;
+    initialState?: T;
+    deps?: S;
+    parentStore?: any;
 }
 
 interface AsyncActionPayload<T> {
@@ -23,7 +34,7 @@ interface Action<T> {
 }
 
 interface Reducer<T> extends Function {
-    (state: T, payload: any, ...args: any[]): T;
+    (state: T, payload?: any, ...args: any[]): T;
 }
 
 interface Dispatch<T> {
@@ -56,14 +67,14 @@ interface Selector<T> {
 }
 
 interface SelectorsMeta {
-    selectors: Selector<any>[];
+    selectors: Function[];
     combiner: Function;
 }
 
 
 interface ActionOptions {
     cache?: Function | boolean;
-    latest?: Function | boolean;
+    latest?: boolean;
 }
 
 interface ActionMeta<T> {
@@ -89,3 +100,4 @@ declare module 'assert' {
     var x: any;
     export = x;
 }
+
