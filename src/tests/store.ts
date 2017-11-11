@@ -268,7 +268,7 @@ describe('tests', () => {
         await store.doSomething();
         expect(store.state.call).to.equal(2);
         expect(logged).to.eql([
-            [{ call: 0 }, undefined],
+            [{ call: 0 }, {}],
             [{ call: 1 }, { call: 0 }],
             [{ call: 2 }, { call: 1 }]
         ]);
@@ -277,7 +277,7 @@ describe('tests', () => {
         await store.doSomething();
         expect(store.state.call).to.equal(3);
         expect(logged).to.eql([
-            [{ call: 0 }, undefined],
+            [{ call: 0 }, {}],
             [{ call: 1 }, { call: 0 }],
             [{ call: 2 }, { call: 1 }]
         ]);
@@ -286,7 +286,7 @@ describe('tests', () => {
         await store.doSomething();
         expect(store.state.call).to.equal(4);
         expect(logged).to.eql([
-            [{ call: 0 }, undefined],
+            [{ call: 0 }, {}],
             [{ call: 1 }, { call: 0 }],
             [{ call: 2 }, { call: 1 }],
             [{ call: 4 }, { call: 3 }]
@@ -296,7 +296,7 @@ describe('tests', () => {
         await store.doSomething();
         expect(store.state.call).to.equal(5);
         expect(logged).to.eql([
-            [{ call: 0 }, undefined],
+            [{ call: 0 }, {}],
             [{ call: 1 }, { call: 0 }],
             [{ call: 2 }, { call: 1 }],
             [{ call: 4 }, { call: 3 }]

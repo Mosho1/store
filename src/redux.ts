@@ -46,10 +46,16 @@ function connectStoresToDispatch(stores: Dictionary<AnyStore>, store: DataStore<
 export function createReduxStore(stores: Dictionary<AnyStore>, initialState?: any, enhancer?: any): DataStore<any> {
 
     let reducers: Dictionary<Reducer<any>> = {};
-    initialState = initialState || {};
+
     for (let k in stores) {
         reducers[k] = stores[k].reducer;
-        initialState[k] = { ...initialState[k], ...stores[k].initialState };
+    }
+
+    if (!initialState) {
+        initialState = {};
+        for (let k in stores) {
+            initialState[k] = stores[k].initialState;
+        }
     }
 
     const combinedReducer = combineReducers(reducers);

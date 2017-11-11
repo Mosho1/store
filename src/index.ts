@@ -393,6 +393,7 @@ export class Store<T, S> extends Mocker {
         stores.add(this);
         this._name = name;
         this.initialState = this.processInitialState(initialState);
+        this.state = this.initialState;
         this.deps = deps as S;
         if (parentStore) this.parentStore = parentStore;
 

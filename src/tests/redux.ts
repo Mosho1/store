@@ -8,12 +8,7 @@ import { it, describe } from './tester';
 describe('tests', () => {
     it('should create a redux store', async () => {
         class TestStore extends Store<any, any> {
-            @action(merge)
-            doSomething() {
-                return {
-                    did: 'this'
-                }
-            }
+
         }
 
         const store = new TestStore({ initialState: { key: 'value' } });
@@ -75,6 +70,8 @@ describe('tests', () => {
         store.doSomething('anotherValue');
         expect(store.something).to.equal('anotherValue');
         expect(callCounter).to.equal(2);
+        expect(store.something).to.equal('anotherValue');
+        expect(callCounter).to.equal(2);
     });
 
     it('should select selectors', async () => {
@@ -111,5 +108,26 @@ describe('tests', () => {
         store.doSomething('anotherValue');
         expect(store.somethingElse).to.equal('anotherValue2');
         expect(callCounter).to.equal(2);
-    })
+        expect(store.somethingElse).to.equal('anotherValue2');
+        expect(callCounter).to.equal(2);
+    });
+
+    it('should create a redux store', async () => {
+        class TestStore extends Store<any, any> {
+            @action(merge)
+            doSomething() {
+                this.state.key += '2';
+            }
+        }
+
+        const store = new TestStore({ initialState: { key: 'value' } });
+
+        const reduxStore = createReduxStore({ store });
+
+        expect(store.state.key).to.equal('value');
+        expect(reduxStore.getState().store).to.have.property('key', 'value');
+        expect(() => store.doSomething).to.throw;
+        expect(store.state.key).to.equal('value');
+        expect(reduxStore.getState().store).to.have.property('key', 'value');
+    });
 });
