@@ -1,6 +1,7 @@
+import * as Types from '../types'
 
 export const ActionStates: {
-    [index: string]: ActionState;
+    [index: string]: Types.ActionState;
     SUCCESS: 'success';
     START: 'start';
     ERROR: 'error';
@@ -47,11 +48,11 @@ export default class ActionTypeManager {
         return this.addNamespace(this.typeName);
     }
 
-    getTypeWithState(state: ActionState) {
+    getTypeWithState(state: Types.ActionState) {
         return this.getType() + ActionTypeManager.delimiter + state;
     }
 
-    isAtState(state: ActionState) {
+    isAtState(state: Types.ActionState) {
         return this.state === state;
     }
 

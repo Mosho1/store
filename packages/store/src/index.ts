@@ -1,15 +1,9 @@
-
 import { ActionStates, default as ActionTypeManager } from './utils/action-type-manager';
 import assert from './utils/assert';
 import { Deferred } from './utils/deferred';
 import { Mocker } from './utils/mocker'
 import { isReduxInternalAction } from './utils/is-redux-internal-action'
-
-class StoreMetadata<T> {
-    public actions: Dictionary<ActionMeta<T>> = {};
-    public selectors: Dictionary<SelectorsMeta> = {};
-    public handlers: Dictionary<Reducer<T>> = {};
-}
+import * as Types from './types'
 
 export type AnyStore = Store<any, any>;
 
@@ -18,11 +12,11 @@ const stores = new Set<AnyStore>();
 
 export class Store<T, S> extends Mocker {
     static errorProps = {};
-    reducersList: Reducer<any>[] = [];
-    actions: Dictionary<PayloadCreator<T>> = {};
-    selectors: Dictionary<Function> = {};
-    store: DataStore<any> = {
-        dispatch: (action: Action<any>) => {
+    reducersList: Types.Reducer<any>[] = [];
+    actions: Types.Dictionary<Types.PayloadCreator<T>> = {};
+    selectors: Types.Dictionary<Function> = {};
+    store: Types.DataStore<any> = {
+        dispatch: (action: Types.Action<any>) => {
             this.setState(this.reducer(this.state, action));
         },
         getState: () => {
@@ -53,7 +47,7 @@ export class Store<T, S> extends Mocker {
         console.error(e);
     };
 
-    protected createSelector(metadata: SelectorsMeta) {
+    protected createSelector(metadata: Types.SelectorsMeta) {
         let { combiner } = metadata;
         return combiner;
     }
@@ -65,7 +59,7 @@ export class Store<T, S> extends Mocker {
         }
     }
 
-    private wrapPayloadCreator(meta: ActionMeta<T>, type: string) {
+    private wrapPayloadCreator(meta: Types.ActionMeta, type: string) {
         const bound = (...args: any[]) => {
             return meta.payloadFn.apply(this, args);
         };
@@ -103,7 +97,7 @@ export class Store<T, S> extends Mocker {
     }
 
     // allows to ignore actions run with arguments identical to the last call
-    checkCachedArguments(args: any | any[], meta: ActionMeta<any>) {
+    checkCachedArguments(args: any | any[], meta: Types.ActionMeta) {
         if (!meta.opts.cache) return true;
         const newCachedArguments = meta.opts.cache === true ? args : meta.opts.cache(args);
         const { cachedArguments } = meta;
@@ -150,27 +144,27 @@ export class Store<T, S> extends Mocker {
                 if (!this.checkCachedArguments(args, actionMeta)) return Promise.resolve();
                 const payload = payloadCreatorWithErrorHandler(...args);
                 const isPromise = payload && (payload as Promise<any>).then;
-                
+
                 const method = isPromise ? this.dispatchAsync : this.dispatchSync;
-        
+
                 return method.call(this, {
                     type,
-                    action: action as PayloadCreator<any>,
+                    action: action as Types.PayloadCreator<any>,
                     meta: actionMeta,
                     payload
                 }, args);
-            }) as Partial<PayloadCreator<any>>;
+            }) as Partial<Types.PayloadCreator<any>>;
 
             action.type = type;
             action.deferred = null;
 
             // these are called by the function returned from decorated @actions
-            this.actions[k] = action as PayloadCreator<any>;
+            this.actions[k] = action as Types.PayloadCreator<any>;
         }
     }
 
-    getActionState(action: Function): ActionState | undefined {
-        const state = (action as PayloadCreator<any>).state;
+    getActionState(action: Function): Types.ActionState | undefined {
+        const state = (action as Types.PayloadCreator<any>).state;
         return state || this.innerStores.map(s => s.getActionState(action)).find(Boolean);
     }
 
@@ -198,15 +192,20 @@ export class Store<T, S> extends Mocker {
         return this.store;
     }
 
-    get metadata(): StoreMetadata<T> {
-        const constructor: any = this.constructor;
+    get metadata(): Types.StoreMetadata<T> {
+        const constructor = this.constructor as {new(): AnyStore, metadata: Types.StoreMetadata<T>};
         if (!('metadata' in constructor)) {
-            return constructor.metadata = new StoreMetadata<T>();
+            const metadata: Types.StoreMetadata<T> = {
+                actions: {},
+                handlers: {},
+                selectors: {},
+            };
+            return constructor.metadata = metadata;
         }
         return constructor.metadata;
     };
 
-    private setActionState(action: PayloadCreator<any>, state: ActionState) {
+    private setActionState(action: Types.PayloadCreator<any>, state: Types.ActionState) {
         action.state = state;
         if (this.parentStore) {
             this.parentStore.actionStateSubscriptions.forEach(fn => fn(action, state));
@@ -215,7 +214,7 @@ export class Store<T, S> extends Mocker {
         }
     }
 
-    dispatchSync({ type, payload, action }: Action<any>) {
+    dispatchSync({ type, payload, action }: Types.Action<any>) {
         assert(this.store.dispatch, 'store has no dispatch method, make sure it\'s a valid store.');
         const typeManager = new ActionTypeManager(type);
 
@@ -231,7 +230,7 @@ export class Store<T, S> extends Mocker {
         return payload;
     }
 
-    async dispatchAsync({ type, meta, payload, action }: Action<any>, actionCreatorArgs: any[]) {
+    async dispatchAsync({ type, meta, payload, action }: Types.Action<any>, actionCreatorArgs: any[]) {
         assert(this.store.dispatch, 'store has no dispatch method, make sure it\'s a valid store.');
         const typeManager = new ActionTypeManager(type);
 
@@ -271,7 +270,7 @@ export class Store<T, S> extends Mocker {
 
     }
 
-    reducer = (state: T, action: Action<any>) => {
+    reducer = (state: T, action: Types.Action<any>) => {
         return this.reducersList.reduce(
             (accState, reducer) =>
                 reducer(accState, action),
@@ -290,7 +289,7 @@ export class Store<T, S> extends Mocker {
             handlerWithScopedTypes[newKey] = handlers[k];
         }
 
-        const initialReducer: Reducer<T> = (state: T, action: Action<any>): T => {
+        const initialReducer: Types.Reducer<T> = (state: T, action: Types.Action<any>): T => {
             const { type, payload } = action;
             const typeManager = new ActionTypeManager(type);
             // TODO: add test to make sure we don't touch original action
@@ -390,7 +389,7 @@ export class Store<T, S> extends Mocker {
         };
     }
 
-    constructor({ name = 'store', initialState = {} as T, deps, parentStore }: StoreConstructorArgs<T, S> = {}) {
+    constructor({ name = 'store', initialState = {} as T, deps, parentStore }: Types.StoreConstructorArgs<T, S> = {}) {
         super();
         stores.add(this);
         this._name = name;
@@ -411,7 +410,7 @@ export class Store<T, S> extends Mocker {
 }
 
 // decorator for Store class methods
-export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, opts: ActionOptions = {}): MethodDecorator {
+export function action(actionHandler: Types.Reducer<any> | AsyncActionHandlers<any>, opts: Types.ActionOptions = {}): MethodDecorator {
     return (
         target: any,
         key: string | symbol,
@@ -422,12 +421,12 @@ export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, o
 
         const { metadata } = target as AnyStore;
 
-        let actionName: string | symbol, handlerFn: Reducer<any>, isAsync: boolean;
+        let actionName: string | symbol, handlerFn: Types.Reducer<any>, isAsync: boolean;
 
         switch (typeof actionHandler) {
             case 'function': {
                 actionName = key;
-                handlerFn = actionHandler as Reducer<any>;
+                handlerFn = actionHandler as Types.Reducer<any>;
                 isAsync = false;
                 break;
             }
@@ -461,7 +460,7 @@ export function action(actionHandler: Reducer<any> | AsyncActionHandlers<any>, o
 }
 
 // decorator for Store class methods
-export function select<T = any>(...selectors: Selector<T>[]): MethodDecorator {
+export function select<T = any>(...selectors: Types.Selector<T>[]): MethodDecorator {
     return (target: any, key: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
         const { metadata } = target as AnyStore;
 
@@ -480,13 +479,13 @@ export function select<T = any>(...selectors: Selector<T>[]): MethodDecorator {
     };
 }
 
-export const getSelect = <T>() => (...selectors: Selector<T>[]) => select<T>(...selectors);
+export const getSelect = <T>() => (...selectors: Types.Selector<T>[]) => select<T>(...selectors);
 
 export interface AsyncActionHandlers<T> {
-    [key: string]: Reducer<T>;
+    [key: string]: Types.Reducer<T>;
 }
 
-export const handleAsyncAction = (handlers: AsyncActionHandlers<any>): Reducer<any> => (state, payload: any, type: string) => {
+export const handleAsyncAction = (handlers: AsyncActionHandlers<any>): Types.Reducer<any> => (state, payload: any, type: string) => {
     const typeManager = new ActionTypeManager(type);
 
     const { SUCCESS, ERROR, START } = ActionTypeManager;

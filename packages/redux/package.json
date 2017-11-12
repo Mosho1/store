@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "name": "redux-store",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "test": "ts-node src/tests/index",
+    "test:watch": "nodemon -x \"npm test\" -e ts",
+    "debug": "npm run build && node --inspect-brk build/tests/index",
+    "debug:watch": "nodemon -x \"npm run debug\" -e ts",
+    "build": "tsc -p tsconfig.json -d",
+    "build:watch": "nodemon -x \"npm run build\" -e ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/node": "^8.0.51",
+    "chai": "^4.1.2",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "reselect": "^3.0.1",
+    "seamless-immutable": "^7.1.2",
+    "store": "^0.0.1",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.6.1"
+  }
+}

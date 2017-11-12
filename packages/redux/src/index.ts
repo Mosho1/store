@@ -1,10 +1,10 @@
 import { createStore, combineReducers } from 'redux';
-import { AnyStore, Store } from './index';
+import { AnyStore, Store } from 'store';
 import { connect } from 'react-redux';
 import * as si from 'seamless-immutable';
 import { createSelector } from 'reselect';
 
-export { action, select } from './index';
+export { action, select } from 'store';
 
 class ActionQueuer {
     queue: Action<any>[] = [];

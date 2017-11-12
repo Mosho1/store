@@ -1,5 +1,5 @@
 import { action, select } from '../index';
-import { createReduxStore, ReduxStore as Store, merge } from '../redux';
+import { createReduxStore, ReduxStore as Store, merge } from '../index';
 import { expect } from 'chai';
 import { it, describe } from './tester';
 

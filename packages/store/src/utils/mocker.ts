@@ -1,3 +1,4 @@
+import {NestedPartial} from '../types';
 
 export class Mocker {
     defineProperties(properties: NestedPartial<{[k in keyof this]: this[k]}>) {

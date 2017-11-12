@@ -1,3 +1,5 @@
+import {IDeferred} from '../types';
+
 export class Deferred<T> implements IDeferred<T> {
     resolve: Function;
     reject: Function;

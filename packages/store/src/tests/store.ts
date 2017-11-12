@@ -1,6 +1,7 @@
 import { Store, action, select, waitForAction } from '../index';
 import { expect } from 'chai';
 import { it, describe } from './tester';
+import {SelectorsMeta} from '../types';
 
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
