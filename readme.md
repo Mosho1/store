@@ -63,7 +63,7 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 
 ## Predictable state
 
-<Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem, while also providing an easy to use interface similar to mobx. The only difference in everyday use from mobx is having to explicitly list dependencies, rather than have them magically (and usefully) computed by mobx.
+<Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem.
 
 ## Reduce boilerplate
 
