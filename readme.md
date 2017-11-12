@@ -1,6 +1,6 @@
 # Introduction
 
-*Name* is a state management library, focused on better developer experience.
+*Name* is a state management library, focused on providing a better developer experience.
 
 The generic store is standalone, but the redux extension uses redux, reselect, and seamless-immutable to provide a modern app state management solution.
 
