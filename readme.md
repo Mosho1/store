@@ -67,19 +67,8 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 
 ## Reduce boilerplate
 
-Here is the simplest possible typical redux action creator:
-
-```
-export const setVisibilityFilter = filter => {
-  return {
-    type: 'SET_VISIBILITY_FILTER',
-    filter
-  }
-}
-```
-
-By using named class methods, `type` can be abstracted away.
+The bare minimum additional code is required to have the benefits of immutable, predictable state.
 
 ## Ease of use
 
-Accessing state and computed properties is easily done via `this`. Calling actions is easily done by calling those actions directly from a reference to the store. The bare minimum additional code is required to have the benefits of immutable, predictable state.
+Accessing state and computed properties is easily done with a store reference. Calling actions is easily done by calling those actions directly from a reference to the store. 
