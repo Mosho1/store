@@ -4,7 +4,7 @@
 
 The generic store is standalone, but the redux extension uses redux, reselect, and seamless-immutable to provide a modern app state management solution.
 
-Despite being based on redux, it functions similarly (and was influenced by) mobx. 
+Despite being based on redux, it looks and feels like (and was influenced by)mobx. 
 
 The idea is to use a class instance that stores our state. All interactions with state are done with through the store instance. Local component state is kept to a minimum.
 
