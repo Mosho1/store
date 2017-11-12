@@ -65,6 +65,10 @@ The redux plugin uses `react-redux`'s `connect`, and will inject props mapped fr
 
 <Name> offers the same benefits as redux, like serializable state, first-class hot reload, and existing ecosystem.
 
+## Simple and Scalable
+
+Like mobx, <Name> uses ES/TS classes and references. Actions and selectors are simple and easy to maintain. Unlike mobx, you have to declare dependencies, no magic. This shifts some of the lifting to the end user, but is ultimately simpler and easier to understand.
+
 ## Reduce boilerplate
 
 The bare minimum additional code is required to have the benefits of immutable, predictable state.
