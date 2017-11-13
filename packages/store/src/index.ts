@@ -389,10 +389,11 @@ export class Store<T, S> extends Mocker {
         };
     }
 
-    constructor({ name = 'store', initialState = {} as T, deps, parentStore }: Types.StoreConstructorArgs<T, S> = {}) {
+    constructor({ name = 'store', initialState, deps, parentStore }: Types.StoreConstructorArgs<T, S> = {}) {
         super();
         stores.add(this);
         this._name = name;
+        initialState = initialState || (this.constructor as any).initialState || {};
         this.initialState = this.processInitialState(initialState);
         this.state = this.initialState;
         this.deps = deps as S;
