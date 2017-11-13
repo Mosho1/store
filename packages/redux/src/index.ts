@@ -100,11 +100,17 @@ export class ReduxStore<T, S> extends Store<T, S> {
         return (component: Function & { defaultProps: object }): Function => {
             // assert(component.prototype instanceof React.Component, 'Must be a component');
             const mapStateToStoreState = selector
-                ? (_: any, props: Partial<U>) => selector(this, props)
+                ? (_: any, props: any) => {
+                    // TODO test props and selected behave well
+                    const selected = selector(this, props);
+                    return { ...props, ...selected };
+                }
                 : this.mapStateToStoreState;
 
+            const store = this.getStore();
+
             const connected = connect(mapStateToStoreState as any, undefined as any, undefined as any, options || {})(component);
-            connected.defaultProps = { ...connected.defaultProps, store: this.getStore() };
+            connected.defaultProps = { ...connected.defaultProps, store};
 
             return connected;
         };
