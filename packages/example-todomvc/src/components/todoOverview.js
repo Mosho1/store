@@ -1,29 +1,34 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {observer} from 'mobx-react';
 import { ACTIVE_TODOS, COMPLETED_TODOS } from '../constants';
-
+import {todoStore, viewStore} from '../stores/index';
 import TodoItem from './todoItem';
 
-@observer
+@viewStore.connect(store => ({
+	todoFilter: store.state.todoFilter
+}))
+@todoStore.connect(store => ({
+	todos: store.state.todos
+}))
 export default class TodoOverview extends React.Component {
+
+	todoStore = todoStore;
+
 	render() {
-		const {todoStore, viewStore} = this.props;
-		if (todoStore.todos.length === 0)
+		if (this.props.todos.length === 0)
 			return null;
 		return <section className="main">
 			<input
 				className="toggle-all"
 				type="checkbox"
 				onChange={this.toggleAll}
-				checked={todoStore.activeTodoCount === 0}
+				checked={this.todoStore.activeTodoCount === 0}
 			/>
 			<ul className="todo-list">
 				{this.getVisibleTodos().map(todo =>
 					(<TodoItem
 						key={todo.id}
 						todo={todo}
-						viewStore={viewStore}
 					/>)
 				)}
 			</ul>
@@ -31,8 +36,8 @@ export default class TodoOverview extends React.Component {
 	}
 
 	getVisibleTodos() {
-		return this.props.todoStore.todos.filter(todo => {
-			switch (this.props.viewStore.todoFilter) {
+		return this.props.todos.filter(todo => {
+			switch (this.props.todoFilter) {
 				case ACTIVE_TODOS:
 					return !todo.completed;
 				case COMPLETED_TODOS:
@@ -45,12 +50,10 @@ export default class TodoOverview extends React.Component {
 
 	toggleAll = (event) => {
 		var checked = event.target.checked;
-		this.props.todoStore.toggleAll(checked);
+		this.todoStore.toggleAll(checked);
 	};
 }
 
-
-TodoOverview.propTypes = {
-	viewStore: PropTypes.object.isRequired,
-	todoStore: PropTypes.object.isRequired
-}
+// TodoOverview.propTypes = {
+// 	todos: PropTypes.array.isRequired,
+// };

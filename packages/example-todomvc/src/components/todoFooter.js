@@ -1,29 +1,38 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {observer} from 'mobx-react';
 import {pluralize} from '../utils';
 import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS } from '../constants';
+import {todoStore, viewStore} from '../stores/index';
 
-@observer
+@viewStore.connect(store => ({
+	todoFilter: store.state.todoFilter
+}))
+@todoStore.connect(store => ({
+	completedCount: todoStore.completedCount,
+	activeTodoCount: todoStore.activeTodoCount
+}))
 export default class TodoFooter extends React.Component {
+
+	todoStore = todoStore;
+
 	render() {
-		const todoStore = this.props.todoStore;
-		if (!todoStore.activeTodoCount && !todoStore.completedCount)
+		const {completedCount, activeTodoCount} = this.props;
+		if (!activeTodoCount && !completedCount)
 			return null;
 
-		const activeTodoWord = pluralize(todoStore.activeTodoCount, 'item');
+		const activeTodoWord = pluralize(activeTodoCount, 'item');
 
 		return (
 			<footer className="footer">
 				<span className="todo-count">
-					<strong>{todoStore.activeTodoCount}</strong> {activeTodoWord} left
+					<strong>{activeTodoCount}</strong> {activeTodoWord} left
 				</span>
 				<ul className="filters">
 					{this.renderFilterLink(ALL_TODOS, "", "All")}
 					{this.renderFilterLink(ACTIVE_TODOS, "active", "Active")}
 					{this.renderFilterLink(COMPLETED_TODOS, "completed", "Completed")}
 				</ul>
-				{ todoStore.completedCount === 0
+				{ completedCount === 0
 					? null
 					: 	<button
 							className="clear-completed"
@@ -38,7 +47,7 @@ export default class TodoFooter extends React.Component {
 	renderFilterLink(filterName, url, caption) {
 		return (<li>
 			<a href={"#/" + url}
-				className={filterName ===  this.props.viewStore.todoFilter ? "selected" : ""}>
+				className={filterName ===  this.props.todoFilter ? "selected" : ""}>
 				{caption}
 			</a>
 			{' '}
@@ -46,11 +55,6 @@ export default class TodoFooter extends React.Component {
 	}
 
 	clearCompleted = () => {
-		this.props.todoStore.clearCompleted();
+		this.todoStore.clearCompleted();
 	};
-}
-
-TodoFooter.propTypes = {
-	viewStore: PropTypes.object.isRequired,
-	todoStore: PropTypes.object.isRequired
 }

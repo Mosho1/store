@@ -58,6 +58,7 @@
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
+    "redux-store": "^0.0.1",
     "todomvc-app-css": "^2.1.0",
     "todomvc-common": "^1.0.3",
     "url-loader": "^0.5.9",
